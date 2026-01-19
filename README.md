@@ -21,6 +21,10 @@ uv sync  # o: pip install -r requirements.txt
 
 ## Editar .env con tu OPENAI_API_KEY
 
+Agregar tu api key a la variable
+
+`OPENAI_API_KEY=YOUR_API_KEY`
+
 ## Correr
 
 `uv run uvicorn src.main:app --reload`
@@ -67,11 +71,11 @@ uv sync  # o: pip install -r requirements.txt
 
 | Fase | Estado | Descripción |
 |------|--------|-------------|
-| 0 - Setup | ✅ Completada | Estructura hexagonal, configuración |
-| 1 - Domain | ✅ Completada | Entidades, VOs, Servicios de dominio |
-| 2 - Application | 🔄 En progreso | Use Cases, DTOs, Ports |
-| 3 - Infrastructure | ⏳ Pendiente | Adapters, OpenAI, Cache |
-| 4 - API | ⏳ Pendiente | Endpoints, middleware |
+| 0 - Setup | Completada | Estructura hexagonal, configuración |
+| 1 - Domain | Completada | Entidades, VOs, Servicios de dominio |
+| 2 - Application | En progreso | Use Cases, DTOs, Ports |
+| 3 - Infrastructure | Pendiente | Adapters, OpenAI, Cache |
+| 4 - API | Pendiente | Endpoints, middleware |
 
 
 ## Fase 0 - Setup del Proyecto
@@ -79,28 +83,28 @@ uv sync  # o: pip install -r requirements.txt
 **Objetivo**: Establecer la estructura base del proyecto siguiendo arquitectura hexagonal.
 
 **Entregables**:
-- ✅ Estructura de carpetas `src/` con arquitectura hexagonal
+- Estructura de carpetas `src/` con arquitectura hexagonal
   - `domain/` - Lógica de negocio pura
   - `application/` - Casos de uso y orquestación
   - `infrastructure/` - Adaptadores externos (OpenAI, cache)
   - `api/` - Endpoints REST
-- ✅ Archivos `__init__.py` para reconocimiento de paquetes Python
-- ✅ `pyproject.toml` con dependencias (FastAPI, Pydantic, OpenAI, pytest, ruff)
-- ✅ `requirements.txt` para ambientes sin `uv`
-- ✅ `.env.example` como plantilla de variables de entorno
+- Archivos `__init__.py` para reconocimiento de paquetes Python
+- `pyproject.toml` con dependencias (FastAPI, Pydantic, OpenAI, pytest, ruff)
+- `requirements.txt` para ambientes sin `uv`
+- `.env.example` como plantilla de variables de entorno
 
 ## Fase 1 - Capa de Dominio
 
 **Objetivo**: Implementar la lógica de negocio central siguiendo DDD, sin dependencias externas.
 
 **Entregables**:
-- ✅ **4 Entidades**: `Lead`, `Message`, `Playbook`, `Sender`
-- ✅ **4 Value Objects**: `WorkExperience`, `CampaignHistory`, `Product`, `ICPProfile`
-- ✅ **4 Enums**: `Channel`, `Seniority`, `MessageStrategy`, `SequenceStep`
-- ✅ **3 Servicios de Dominio**: `ICPMatcher`, `SeniorityInferrer`, `StrategySelector`
-- ✅ **10 Excepciones**: Jerarquía estructurada compatible con RFC 7807
-- ✅ **Validación en construcción**: Todas las entidades validan en `__post_init__`
-- ✅ **100% Python puro**: Sin dependencias de frameworks
+- **4 Entidades**: `Lead`, `Message`, `Playbook`, `Sender`
+- **4 Value Objects**: `WorkExperience`, `CampaignHistory`, `Product`, `ICPProfile`
+- **4 Enums**: `Channel`, `Seniority`, `MessageStrategy`, `SequenceStep`
+- **3 Servicios de Dominio**: `ICPMatcher`, `SeniorityInferrer`, `StrategySelector`
+- **10 Excepciones**: Jerarquía estructurada compatible con RFC 7807
+- **Validación en construcción**: Todas las entidades validan en `__post_init__`
+- **100% Python puro**: Sin dependencias de frameworks
 
 ### Estructura de la Capa
 
