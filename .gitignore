@@ -1,0 +1,54 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Entornos virtuales
+.venv/
+venv/
+env/
+ENV/
+
+# Variables de entorno
+.env
+.env.*
+!.env.example
+
+# Herramientas de desarrollo
+pytest_cache/
+mypy_cache/
+ruff_cache/
+coverage
+htmlcov/
+tox/
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Build y distribución
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Alembic
+alembic/versions/*.pyc
+
+# Logs
+*.log
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
