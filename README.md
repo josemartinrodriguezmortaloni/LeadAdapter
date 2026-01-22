@@ -848,7 +848,7 @@ src/infrastructure/
 La capa de infraestructura representa los **detalles técnicos y conexiones externas**. Esta capa:
 
 - **Implementa los puertos**: Los adapters son clases concretas que satisfacen las interfaces ABC
-- **Es intercambiable**: Se puede cambiar OpenAI por Anthropic sin tocar Application (Redis adapter pendiente)
+- **Es intercambiable**: Se puede cambiar OpenAI por Anthropic sin tocar Application 
 - **Centraliza configuración**: Settings usa pydantic-settings con variables de entorno
 - **Encapsula prompts**: Los templates de prompts viven en infraestructura, no en dominio
 
