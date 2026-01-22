@@ -1,5 +1,4 @@
 from dataclasses import dataclass, field
-from typing import Optional
 
 from domain.exceptions.domain_exceptions import InvalidLeadError
 from domain.value_objects.campaign_history import CampaignHistory
@@ -11,12 +10,12 @@ class Lead:
     first_name: str
     job_title: str
     company_name: str
-    last_name: Optional[str] = None
+    last_name: str | None = None
     work_experience: list[WorkExperience] = field(default_factory=list)
-    campaign_history: Optional[CampaignHistory] = None
-    bio: Optional[str] = None
+    campaign_history: CampaignHistory | None = None
+    bio: str | None = None
     skills: list[str] = field(default_factory=list)
-    linkedin_url: Optional[str] = None
+    linkedin_url: str | None = None
 
     def __post_init__(self) -> None:
         if not self.first_name.strip():
@@ -32,7 +31,7 @@ class Lead:
             return f"{self.first_name} {self.last_name}"
         return self.first_name
 
-    def years_in_current_role(self) -> Optional[int]:
+    def years_in_current_role(self) -> int | None:
         """Calcula años en el rol actual desde work_experience"""
         if not self.work_experience:
             return None

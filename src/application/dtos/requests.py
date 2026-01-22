@@ -13,10 +13,8 @@ Note:
 """
 
 from datetime import date, datetime
-from typing import Optional
 
 from pydantic import BaseModel, Field, field_validator
-
 
 # ============ Nested DTOs ============
 
@@ -39,8 +37,8 @@ class WorkExperienceDTO(BaseModel):
     company: str
     title: str
     start_date: date
-    end_date: Optional[date] = None
-    description: Optional[str] = None
+    end_date: date | None = None
+    description: str | None = None
 
 
 class CampaignHistoryDTO(BaseModel):
@@ -58,8 +56,8 @@ class CampaignHistoryDTO(BaseModel):
     """
 
     total_attempts: int = 0
-    last_contact_date: Optional[datetime] = None
-    last_channel: Optional[str] = None
+    last_contact_date: datetime | None = None
+    last_channel: str | None = None
     responses_received: int = 0
 
 
@@ -137,14 +135,14 @@ class LeadDTO(BaseModel):
     """
 
     first_name: str = Field(..., min_length=1, description="Nombre del lead")
-    last_name: Optional[str] = Field(None, description="Apellido del lead")
+    last_name: str | None = Field(None, description="Apellido del lead")
     job_title: str = Field(..., min_length=1, description="Título del puesto actual")
     company_name: str = Field(..., min_length=1, description="Empresa actual")
     work_experience: list[WorkExperienceDTO] = Field(default_factory=list)
-    campaign_history: Optional[CampaignHistoryDTO] = None
-    bio: Optional[str] = Field(None, description="Biografía del perfil")
+    campaign_history: CampaignHistoryDTO | None = None
+    bio: str | None = Field(None, description="Biografía del perfil")
     skills: list[str] = Field(default_factory=list, description="Habilidades técnicas")
-    linkedin_url: Optional[str] = Field(None, description="URL de LinkedIn")
+    linkedin_url: str | None = Field(None, description="URL de LinkedIn")
 
     @field_validator("first_name", "job_title", "company_name")
     @classmethod
@@ -178,8 +176,8 @@ class SenderDTO(BaseModel):
 
     name: str = Field(..., min_length=1, description="Nombre del remitente")
     company_name: str = Field(..., min_length=1, description="Empresa del remitente")
-    job_title: Optional[str] = Field(None, description="Título del puesto")
-    email: Optional[str] = Field(None, description="Email de contacto")
+    job_title: str | None = Field(None, description="Título del puesto")
+    email: str | None = Field(None, description="Email de contacto")
 
 
 class PlaybookDTO(BaseModel):

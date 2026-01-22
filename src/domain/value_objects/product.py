@@ -1,5 +1,4 @@
 from dataclasses import dataclass, field
-from typing import Optional
 
 from domain.exceptions.domain_exceptions import InvalidProductError
 
@@ -16,7 +15,7 @@ class Product:
         if not self.name.strip():
             raise InvalidProductError(field="name", reason="cannot be empty")
 
-    def get_benefit_for_pain(self, pain_point: str) -> Optional[str]:
+    def get_benefit_for_pain(self, pain_point: str) -> str | None:
         """Encuentra el beneficio que resuelve un pain point"""
         pain_lower = pain_point.lower()
 

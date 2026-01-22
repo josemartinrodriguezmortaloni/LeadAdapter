@@ -5,24 +5,25 @@ description = "API FastAPI con arquitectura limpia"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "fastapi>=0.115.0",
-    "uvicorn[standard]>=0.32.0",
-    "pydantic>=2.10.0",
-    "pydantic-settings>=2.6.0",
-    "openai>=1.10.0",
-    "redis>=5.2.0",
-    "httpx>=0.28.0",
-    "python-dotenv>=1.0.0",
+  "fastapi>=0.115.0",
+  "uvicorn[standard]>=0.32.0",
+  "pydantic>=2.10.0",
+  "pydantic-settings>=2.6.0",
+  "openai>=1.10.0",
+  "redis>=5.2.0",
+  "httpx>=0.28.0",
+  "python-dotenv>=1.0.0",
+  "tiktoken>=0.12.0",
 ]
 
 [project.optional-dependencies]
 dev = [
-    "ruff>=0.8.4",
-    "pytest>=8.3.0",
-    "pytest-asyncio>=0.24.0",
-    "pytest-cov>=4.1.0",
-    "mypy>=1.8.0",
-    "pre-commit>=4.0.0",
+  "ruff>=0.8.4",
+  "pytest>=8.3.0",
+  "pytest-asyncio>=0.24.0",
+  "pytest-cov>=4.1.0",
+  "mypy>=1.8.0",
+  "pre-commit>=4.0.0",
 ]
 
 [build-system]
@@ -39,18 +40,18 @@ target-version = "py312"
 
 [tool.ruff.lint]
 select = [
-    "E",    # pycodestyle errors
-    "F",    # pyflakes
-    "I",    # isort
-    "N",    # pep8-naming
-    "W",    # pycodestyle warnings
-    "UP",   # pyupgrade
-    "B",    # flake8-bugbear
-    "C4",   # flake8-comprehensions
-    "SIM",  # flake8-simplify
+  "E",   # pycodestyle errors
+  "F",   # pyflakes
+  "I",   # isort
+  "N",   # pep8-naming
+  "W",   # pycodestyle warnings
+  "UP",  # pyupgrade
+  "B",   # flake8-bugbear
+  "C4",  # flake8-comprehensions
+  "SIM", # flake8-simplify
 ]
 ignore = [
-    "E501",  # line too long (manejado por formatter)
+  "E501", # line too long (manejado por formatter)
 ]
 
 [tool.ruff.format]
@@ -73,17 +74,14 @@ pythonpath = ["."]
 # Configuración de Coverage
 [tool.coverage.run]
 source = ["src"]
-omit = [
-    "*/tests/*",
-    "*/__init__.py",
-]
+omit = ["*/tests/*", "*/__init__.py"]
 
 [tool.coverage.report]
 exclude_lines = [
-    "pragma: no cover",
-    "def __repr__",
-    "raise AssertionError",
-    "raise NotImplementedError",
-    "if __name__ == .__main__.:",
-    "if TYPE_CHECKING:",
+  "pragma: no cover",
+  "def __repr__",
+  "raise AssertionError",
+  "raise NotImplementedError",
+  "if __name__ == .__main__.:",
+  "if TYPE_CHECKING:",
 ]

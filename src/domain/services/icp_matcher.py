@@ -1,5 +1,3 @@
-from typing import Optional
-
 from domain.entities.lead import Lead
 from domain.entities.playbook import Playbook
 from domain.value_objects.icp_profile import ICPProfile
@@ -45,7 +43,7 @@ class ICPMatcher:
     ```
     """
 
-    def match(self, lead: Lead, playbook: Playbook) -> Optional[ICPProfile]:
+    def match(self, lead: Lead, playbook: Playbook) -> ICPProfile | None:
         """
         Encuentra el ICP que mejor matchea con el lead.
 
@@ -70,7 +68,7 @@ class ICPMatcher:
         if not playbook.icp_profiles:
             return None
 
-        best_match: Optional[ICPProfile] = None
+        best_match: ICPProfile | None = None
         best_score = 0
 
         for icp in playbook.icp_profiles:

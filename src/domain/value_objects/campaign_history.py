@@ -1,16 +1,15 @@
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import Optional
 
 
 # inmutable
 @dataclass(frozen=True)
 class CampaignHistory:
     total_attempts: int = 0
-    last_contact_date: Optional[datetime] = None
-    last_channel: Optional[str] = None
+    last_contact_date: datetime | None = None
+    last_channel: str | None = None
     responses_received: int = 0
-    last_response_sentiment: Optional[str] = None
+    last_response_sentiment: str | None = None
 
     @property
     def has_responded(self) -> bool:
@@ -22,7 +21,7 @@ class CampaignHistory:
             return 0.0
         return self.responses_received / self.total_attempts
 
-    def days_since_last_contact(self) -> Optional[int]:
+    def days_since_last_contact(self) -> int | None:
         if not self.last_contact_date:
             return None
         delta = datetime.now(timezone.utc) - self.last_contact_date

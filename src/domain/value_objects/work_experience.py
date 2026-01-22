@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 from datetime import date
-from typing import Optional
 
 from domain.exceptions.domain_exceptions import InvalidWorkExperienceError
 
@@ -11,8 +10,8 @@ class WorkExperience:
     company: str
     title: str
     start_date: date
-    end_date: Optional[date] = None
-    description: Optional[str] = None
+    end_date: date | None = None
+    description: str | None = None
 
     def __post_init__(self) -> None:
         if not self.company.strip():

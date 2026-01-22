@@ -11,7 +11,6 @@ Note:
 """
 
 from datetime import datetime, timezone
-from typing import Optional
 
 from pydantic import BaseModel, Field
 
@@ -197,7 +196,7 @@ class ErrorResponse(BaseModel):
     """
 
     error: str = Field(..., description="Mensaje de error legible")
-    detail: Optional[str] = Field(None, description="Detalle adicional")
+    detail: str | None = Field(None, description="Detalle adicional")
     code: str = Field(..., description="Código de error para manejo programático")
 
 

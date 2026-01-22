@@ -1,5 +1,4 @@
 from dataclasses import dataclass, field
-from typing import Optional
 
 from domain.exceptions.domain_exceptions import InvalidPlaybookError
 from domain.value_objects.icp_profile import ICPProfile
@@ -21,7 +20,7 @@ class Playbook:
         if not self.products:
             raise InvalidPlaybookError(field="products", reason="cannot be empty")
 
-    def get_product_for_icp(self, icp: ICPProfile) -> Optional[Product]:
+    def get_product_for_icp(self, icp: ICPProfile) -> Product | None:
         """Obtiene el producto más relevante para un ICP.
 
         Busca el producto cuyos target_problems mejor coincidan con
@@ -39,7 +38,7 @@ class Playbook:
         if not icp.pain_points:
             return self.products[0]
 
-        best_product: Optional[Product] = None
+        best_product: Product | None = None
         best_score = 0
 
         for product in self.products:

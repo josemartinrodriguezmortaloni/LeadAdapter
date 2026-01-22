@@ -1,6 +1,5 @@
 import logging
 from dataclasses import dataclass
-from typing import Optional
 
 from application.services.message_scorer import MessageScorer
 from application.services.prompt_chain_orchestrator import PromptChainOrchestrator
@@ -35,7 +34,7 @@ class QualityGate:
         channel: Channel,
         sequence_step: SequenceStep,
         strategy: MessageStrategy,
-        matched_icp: Optional[ICPProfile],
+        matched_icp: ICPProfile | None,
         seniority: Seniority,
     ) -> tuple[Message, int]:
         """
@@ -48,7 +47,7 @@ class QualityGate:
             QualityThresholdNotMetError: Si después de max_attempts no se logra
         """
         attempts = 0
-        best_message: Optional[Message] = None
+        best_message: Message | None = None
         best_score = 0.0
 
         while attempts < self.max_attempts:

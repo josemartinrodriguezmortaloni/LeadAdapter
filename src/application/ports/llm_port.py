@@ -58,8 +58,8 @@ class LLMPort(ABC):
         self,
         prompt: str,
         system_prompt: str | None = None,
-        temperature: float = 0.3,
-        max_tokens: int = 1000,
+        temperature: float = 0.2,
+        max_output_tokens: int = 1000,
     ) -> LLMResponse:
         """
         Genera una completion de texto desde el LLM.

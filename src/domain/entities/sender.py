@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from typing import Optional
 
 from domain.exceptions.domain_exceptions import InvalidSenderError
 
@@ -8,8 +7,8 @@ from domain.exceptions.domain_exceptions import InvalidSenderError
 class Sender:
     name: str
     company_name: str
-    job_title: Optional[str] = None
-    email: Optional[str] = None
+    job_title: str | None = None
+    email: str | None = None
 
     def __post_init__(self) -> None:
         if not self.name.strip():

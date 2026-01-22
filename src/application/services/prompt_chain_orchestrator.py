@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from typing import Optional
 
 from application.ports.llm_port import LLMPort
 from domain.entities.lead import Lead
@@ -37,7 +36,7 @@ class PromptChainOrchestrator:
         channel: Channel,
         sequence_step: SequenceStep,
         strategy: MessageStrategy,
-        matched_icp: Optional[ICPProfile],
+        matched_icp: ICPProfile | None,
         seniority: Seniority,
     ) -> tuple[str, int]:
         """
@@ -86,7 +85,7 @@ class PromptChainOrchestrator:
         lead: Lead,
         classification: LeadClassification,
         playbook: Playbook,
-        matched_icp: Optional[ICPProfile],
+        matched_icp: ICPProfile | None,
     ) -> tuple[InferredContext, int]:
         """Step 2: Infer pain points and hooks for personalization."""
         # TODO: Implement LLM call with inference prompt
