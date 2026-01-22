@@ -54,17 +54,6 @@ Agregar tu api key a la variable
 - **Lenguaje ubicuo**: Las entidades reflejan conceptos de negocio (Lead, Playbook, Sender)
 - **Encapsulación**: Las reglas de negocio viven dentro de las entidades (`__post_init__`)
 
-## Patrones Aplicados
-
-| Patrón | Dónde | Justificación |
-|--------|-------|---------------|
-| **Value Object** | `Product`, `ICPProfile`, `WorkExperience` | Inmutabilidad, igualdad por valor |
-| **Entity** | `Lead`, `Message`, `Playbook`, `Sender` | Identidad + ciclo de vida |
-| **Domain Service** | `ICPMatcher`, `SeniorityInferrer`, `StrategySelector` | Lógica stateless que no pertenece a una entidad |
-| **Self-Validation** | Todas las entidades (`__post_init__`) | Objetos siempre válidos (fail-fast) |
-| **Strategy** | `MessageStrategy` enum | Estrategias de mensaje intercambiables |
-| **Template Method** | `DomainException.to_problem_detail()` | Comportamiento base + customización |
-
 ---
 
 # Resumen de lo Realizado
@@ -73,8 +62,8 @@ Agregar tu api key a la variable
 |------|--------|-------------|
 | 0 - Setup | Completada | Estructura hexagonal, configuración |
 | 1 - Domain | Completada | Entidades, VOs, Servicios de dominio |
-| 2 - Application | En progreso | Use Cases, DTOs, Ports |
-| 3 - Infrastructure | Pendiente | Adapters, OpenAI, Cache |
+| 2 - Application | Completada | Use Cases, DTOs, Ports, Services |
+| 3 - Infrastructure | Completada | Adapters, OpenAI, Cache, Prompts |
 | 4 - API | Pendiente | Endpoints, middleware |
 
 
@@ -104,7 +93,6 @@ Agregar tu api key a la variable
 - **3 Servicios de Dominio**: `ICPMatcher`, `SeniorityInferrer`, `StrategySelector`
 - **10 Excepciones**: Jerarquía estructurada compatible con RFC 7807
 - **Validación en construcción**: Todas las entidades validan en `__post_init__`
-- **100% Python puro**: Sin dependencias de frameworks
 
 ### Estructura de la Capa
 
@@ -473,3 +461,564 @@ sequenceDiagram
     Note over IM: Mejor: ICP2 con score 0.35 >= 0.3
     IM-->>Llamador: return ICP: "Developers"
 ```
+
+## Fase 2 - Capa de Aplicación
+
+**Objetivo**: Implementar la lógica de orquestación siguiendo Arquitectura Hexagonal con Ports & Adapters, conectando el dominio con la infraestructura a través de abstracciones.
+
+**Entregables**:
+- **2 Puertos (Interfaces)**: `LLMPort`, `CachePort`
+- **6 DTOs de Request**: `LeadDTO`, `SenderDTO`, `PlaybookDTO`, `WorkExperienceDTO`, `CampaignHistoryDTO`, `ICPProfileDTO`, `ProductDTO`, `GenerateMessageRequest`
+- **5 DTOs de Response**: `GenerateMessageResponse`, `QualityDTO`, `QualityBreakdownDTO`, `MetadataDTO`, `ErrorResponse`, `HealthResponse`
+- **1 Use Case**: `GenerateMessageUseCase`
+- **4 Application Services**: `PromptChainOrchestrator`, `MessageScorer`, `QualityGate`, `EntityMapper`
+- **5 Scoring Criteria (Strategy)**: `ScoringCriterion` (ABC), `PersonalizationCriterion`, `AntiSpamCriterion`, `StructureCriterion`, `ToneCriterion`
+
+### Estructura de la Capa
+
+```
+src/application/
+├── ports/                  # Interfaces (contratos para infraestructura)
+│   ├── llm_port.py         # Puerto para LLMs (complete, complete_json, count_tokens)
+│   └── cache_port.py       # Puerto para cache (get, set, delete, exists, get_or_set)
+│
+├── dtos/                   # Data Transfer Objects (Pydantic)
+│   ├── requests.py         # DTOs de entrada: Lead, Sender, Playbook, Request
+│   └── responses.py        # DTOs de salida: Response, Quality, Metadata, Error
+│
+├── use_cases/              # Casos de uso (orquestación principal)
+│   └── generate_message.py # GenerateMessageUseCase: coordina todo el flujo
+│
+├── services/               # Servicios de aplicación
+│   ├── prompt_chain_orchestrator.py  # Cadena de 3 prompts LLM
+│   ├── quality_gate.py               # Control de calidad con reintentos
+│   ├── message_scorer.py             # Scorer extensible (Strategy Pattern)
+│   └── scoring/                      # Criterios de scoring pluggables
+│       ├── scoring_criterion.py      # ABC para criterios
+│       ├── personalization_criterion.py
+│       ├── anti_spam_criterion.py
+│       ├── structure_criterion.py
+│       └── tone_criterion.py
+│
+└── mappers/                # Conversión DTO ↔ Entidad
+    └── entity_mapper.py    # Data Mapper Pattern
+```
+
+La capa de aplicación representa la **orquestación y coordinación** entre el dominio y la infraestructura. Esta capa:
+
+- **Depende solo de abstracciones**: Los puertos son interfaces ABC que la infraestructura implementa
+- **Usa Pydantic para validación**: DTOs validan datos de entrada/salida automáticamente
+- **Implementa Cache-Aside**: Verifica cache antes de procesar, guarda resultados exitosos
+- **Extensible via Strategy**: Nuevos criterios de scoring sin modificar código existente
+
+### Modelo de la Capa de Aplicación
+
+```mermaid
+classDiagram
+    direction TB
+    
+    %% ===== PUERTOS (INTERFACES) =====
+    class LLMPort {
+        <<interface>>
+        +complete(prompt, system_prompt, temperature, max_output_tokens) LLMResponse
+        +complete_json(prompt, system_prompt, temperature) LLMResponse
+        +count_tokens(text) int
+    }
+    
+    class LLMResponse {
+        <<frozen>>
+        +str content
+        +int prompt_tokens
+        +int response_tokens
+        +str model
+        --
+        +total_tokens: int
+    }
+    
+    class CachePort {
+        <<interface>>
+        +get(key) Any?
+        +set(key, value, ttl_seconds) None
+        +delete(key) None
+        +exists(key) bool
+        +get_or_set(key, factory, ttl_seconds) Any
+    }
+    
+    %% ===== DTOs REQUEST =====
+    class GenerateMessageRequest {
+        +str channel
+        +str sequence_step
+        +LeadDTO lead
+        +SenderDTO sender
+        +PlaybookDTO playbook
+    }
+    
+    class LeadDTO {
+        +str first_name
+        +str? last_name
+        +str job_title
+        +str company_name
+        +list~WorkExperienceDTO~ work_experience
+        +CampaignHistoryDTO? campaign_history
+        +str? bio
+        +list~str~ skills
+        +str? linkedin_url
+    }
+    
+    class PlaybookDTO {
+        +str communication_style
+        +list~ProductDTO~ products
+        +list~ICPProfileDTO~ icp_profiles
+        +list~str~ success_cases
+        +list~str~ value_propositions
+    }
+    
+    %% ===== DTOs RESPONSE =====
+    class GenerateMessageResponse {
+        +str message_id
+        +str content
+        +QualityDTO quality
+        +str strategy_used
+        +MetadataDTO metadata
+        +datetime created_at
+    }
+    
+    class QualityDTO {
+        +float score
+        +QualityBreakdownDTO breakdown
+        +bool passes_threshold
+    }
+    
+    class MetadataDTO {
+        +int tokens_used
+        +int generation_time_ms
+        +str model_used
+        +int attempts
+    }
+    
+    %% ===== USE CASE =====
+    class GenerateMessageUseCase {
+        +LLMPort llm
+        +CachePort cache
+        +PromptChainOrchestrator prompt_orchestrator
+        +QualityGate quality_gate
+        +StrategySelector strategy_selector
+        +SeniorityInferrer seniority_inferrer
+        +ICPMatcher icp_matcher
+        +EntityMapper entity_mapper
+        --
+        +execute(request) GenerateMessageResponse
+        -_build_cache_key(request) str
+    }
+    
+    %% ===== APPLICATION SERVICES =====
+    class PromptChainOrchestrator {
+        +LLMPort llm
+        --
+        +execute_chain(lead, sender, ...) tuple~str,int~
+        -_classify_lead(lead) tuple~LeadClassification,int~
+        -_infer_context(lead, ...) tuple~InferredContext,int~
+        -_generate_message(lead, ...) tuple~str,int~
+    }
+    
+    class LeadClassification {
+        +str role_type
+        +float confidence
+    }
+    
+    class InferredContext {
+        +list~str~ pain_points
+        +list~str~ hooks
+        +list~str~ talking_points
+    }
+    
+    class QualityGate {
+        +PromptChainOrchestrator orchestrator
+        +MessageScorer scorer
+        +float threshold
+        +int max_attempts
+        --
+        +generate_with_retry(lead, ...) tuple~Message,int~
+    }
+    
+    class MessageScorer {
+        -list~ScoringCriterion~ _criteria
+        +STANDARD_CRITERIA: frozenset
+        --
+        +score(content, lead) ScoreBreakdown
+        +get_criterion(name) ScoringCriterion?
+        +max_possible_score: float
+        +criteria: list
+    }
+    
+    class ScoreBreakdown {
+        +float personalization
+        +float anti_spam
+        +float structure
+        +float tone
+        +dict extra_scores
+        --
+        +total: float
+        +get_score(name) float
+        +to_dict() dict
+    }
+    
+    %% ===== SCORING CRITERIA (STRATEGY) =====
+    class ScoringCriterion {
+        <<abstract>>
+        +name: str
+        +max_score: float
+        --
+        +score(content, lead) float
+    }
+    
+    class PersonalizationCriterion {
+        +name = "personalization"
+        +max_score = 3.0
+    }
+    
+    class AntiSpamCriterion {
+        +name = "anti_spam"
+        +max_score = 3.0
+    }
+    
+    class StructureCriterion {
+        +name = "structure"
+        +max_score = 2.0
+    }
+    
+    class ToneCriterion {
+        +name = "tone"
+        +max_score = 2.0
+    }
+    
+    %% ===== MAPPER =====
+    class EntityMapper {
+        +to_lead(dto) Lead
+        +to_sender(dto) Sender
+        +to_playbook(dto) Playbook
+    }
+    
+    %% ===== RELACIONES =====
+    LLMPort ..> LLMResponse : returns
+    
+    GenerateMessageUseCase --> LLMPort : usa
+    GenerateMessageUseCase --> CachePort : usa
+    GenerateMessageUseCase --> PromptChainOrchestrator
+    GenerateMessageUseCase --> QualityGate
+    GenerateMessageUseCase --> EntityMapper
+    GenerateMessageUseCase ..> GenerateMessageRequest : input
+    GenerateMessageUseCase ..> GenerateMessageResponse : output
+    
+    PromptChainOrchestrator --> LLMPort : usa
+    PromptChainOrchestrator ..> LeadClassification
+    PromptChainOrchestrator ..> InferredContext
+    
+    QualityGate --> PromptChainOrchestrator
+    QualityGate --> MessageScorer
+    
+    MessageScorer --> ScoringCriterion : strategy
+    MessageScorer ..> ScoreBreakdown : returns
+    
+    ScoringCriterion <|-- PersonalizationCriterion
+    ScoringCriterion <|-- AntiSpamCriterion
+    ScoringCriterion <|-- StructureCriterion
+    ScoringCriterion <|-- ToneCriterion
+    
+    GenerateMessageResponse --> QualityDTO
+    GenerateMessageResponse --> MetadataDTO
+    QualityDTO --> QualityBreakdownDTO
+    
+    GenerateMessageRequest --> LeadDTO
+    GenerateMessageRequest --> PlaybookDTO
+    
+    EntityMapper ..> LeadDTO : maps from
+    EntityMapper ..> Lead : maps to
+```
+
+### Diagrama de Secuencia: Flujo Completo del Use Case
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant API
+    participant UC as GenerateMessageUseCase
+    participant Cache as CachePort
+    participant Mapper as EntityMapper
+    participant SI as SeniorityInferrer
+    participant IM as ICPMatcher
+    participant SS as StrategySelector
+    participant QG as QualityGate
+    participant PCO as PromptChainOrchestrator
+    participant Scorer as MessageScorer
+    participant LLM as LLMPort
+    
+    API->>UC: execute(request)
+    
+    rect rgb(240, 248, 255)
+        Note over UC,Cache: 1. Cache-Aside Check
+        UC->>UC: _build_cache_key(request)
+        UC->>Cache: get(cache_key)
+        alt Cache Hit
+            Cache-->>UC: cached_response
+            UC-->>API: GenerateMessageResponse
+        end
+    end
+    
+    rect rgb(255, 248, 240)
+        Note over UC,Mapper: 2. DTO → Domain Mapping
+        UC->>Mapper: to_lead(request.lead)
+        UC->>Mapper: to_sender(request.sender)
+        UC->>Mapper: to_playbook(request.playbook)
+    end
+    
+    rect rgb(240, 255, 240)
+        Note over UC,SS: 3. Domain Services
+        UC->>SI: infer(lead.job_title)
+        SI-->>UC: Seniority.SENIOR
+        UC->>IM: match(lead, playbook)
+        IM-->>UC: matched_icp | None
+        UC->>SS: select(lead, channel, ...)
+        SS-->>UC: MessageStrategy
+    end
+    
+    rect rgb(255, 240, 255)
+        Note over QG,LLM: 4. Quality Gate con Retry
+        UC->>QG: generate_with_retry(...)
+        
+        loop max_attempts (hasta pasar threshold)
+            QG->>PCO: execute_chain(...)
+            
+            Note over PCO,LLM: Cadena de 3 prompts
+            PCO->>LLM: complete_json (classify_lead)
+            LLM-->>PCO: LeadClassification
+            PCO->>LLM: complete_json (infer_context)
+            LLM-->>PCO: InferredContext
+            PCO->>LLM: complete (generate_message)
+            LLM-->>PCO: message_content
+            
+            PCO-->>QG: (content, tokens)
+            
+            QG->>Scorer: score(content, lead)
+            Scorer-->>QG: ScoreBreakdown
+            
+            alt score >= threshold
+                QG-->>UC: (Message, attempts)
+            else score < threshold
+                Note over QG: Retry con nuevo intento
+            end
+        end
+    end
+    
+    rect rgb(248, 255, 248)
+        Note over UC,Cache: 5. Cache & Response
+        UC->>UC: build GenerateMessageResponse
+        UC->>Cache: set(cache_key, response, ttl)
+        UC-->>API: GenerateMessageResponse
+    end
+```
+
+## Fase 3 - Capa de Infraestructura
+
+**Objetivo**: Implementar los adaptadores concretos que satisfacen los puertos definidos en Application Layer, conectando con servicios externos (OpenAI, Redis/Memory).
+
+**Entregables**:
+- **2 Adapters**: `OpenAIAdapter` (LLMPort), `MemoryCacheAdapter` (CachePort)
+- **1 Configuración**: `Settings` (pydantic-settings con 12 variables)
+- **3 Templates de Prompts**: `classify_lead`, `infer_context`, `generate_message`
+- **Patrones Aplicados**: Adapter, Singleton (cached settings)
+
+### Estructura de la Capa
+
+```
+src/infrastructure/
+├── config/                 # Configuración de la aplicación
+│   └── settings.py         # Settings con pydantic-settings (Singleton via lru_cache)
+│
+├── adapters/               # Implementaciones concretas de los puertos
+│   ├── openai_adapter.py   # Implementa LLMPort → OpenAI API
+│   └── memory_cache_adapter.py  # Implementa CachePort → Dict in-memory
+│
+└── prompts/                # Templates de prompts para LLM
+    ├── classify_lead.py    # Prompt para clasificar rol del lead
+    ├── infer_context.py    # Prompt para inferir pain points y hooks
+    └── generate_message.py # Prompt para generar mensaje final
+```
+
+La capa de infraestructura representa los **detalles técnicos y conexiones externas**. Esta capa:
+
+- **Implementa los puertos**: Los adapters son clases concretas que satisfacen las interfaces ABC
+- **Es intercambiable**: Se puede cambiar OpenAI por Anthropic, o Memory por Redis, sin tocar Application
+- **Centraliza configuración**: Settings usa pydantic-settings con variables de entorno
+- **Encapsula prompts**: Los templates de prompts viven en infraestructura, no en dominio
+
+### Modelo de la Capa de Infraestructura
+
+```mermaid
+classDiagram
+    direction TB
+    
+    %% ===== PUERTOS (de Application) =====
+    class LLMPort {
+        <<interface>>
+        +complete(prompt, system_prompt, temperature, max_output_tokens) LLMResponse
+        +complete_json(prompt, system_prompt, temperature) LLMResponse
+        +count_tokens(text) int
+    }
+    
+    class CachePort {
+        <<interface>>
+        +get(key) Any?
+        +set(key, value, ttl_seconds) None
+        +delete(key) None
+        +exists(key) bool
+    }
+    
+    %% ===== ADAPTERS =====
+    class OpenAIAdapter {
+        -AsyncOpenAI client
+        -str model
+        -Settings settings
+        -Encoding _encoding
+        --
+        +complete(prompt, ...) LLMResponse
+        +complete_json(prompt, ...) LLMResponse
+        +count_tokens(text) int
+    }
+    
+    class MemoryCacheAdapter {
+        -dict~str,CacheEntry~ _cache
+        -asyncio.Lock _lock
+        --
+        +get(key) Any?
+        +set(key, value, ttl_seconds) None
+        +delete(key) None
+        +exists(key) bool
+        +clear() None
+    }
+    
+    class CacheEntry {
+        <<dataclass>>
+        +Any value
+        +datetime expires_at
+    }
+    
+    %% ===== CONFIGURACIÓN =====
+    class Settings {
+        <<BaseSettings>>
+        +str app_name
+        +str app_version
+        +bool debug
+        --
+        +str openai_api_key
+        +str openai_model
+        +int openai_timeout
+        --
+        +str? redis_url
+        +int cache_ttl_seconds
+        --
+        +float quality_threshold
+        +int max_generation_attempts
+        --
+        +int rate_limit_requests
+        +int rate_limit_window_seconds
+    }
+    
+    %% ===== PROMPTS =====
+    class ClassifyLeadPrompt {
+        <<module>>
+        +CLASSIFY_LEAD_SYSTEM: str
+        +build_classify_lead_prompt(job_title, company, seniority) str
+    }
+    
+    class InferContextPrompt {
+        <<module>>
+        +INFER_CONTEXT_SYSTEM: str
+        +build_infer_context_prompt(job_title, company, industry, ...) str
+    }
+    
+    class GenerateMessagePrompt {
+        <<module>>
+        +GENERATE_MESSAGE_SYSTEM: str
+        +build_generate_message_prompt(lead_name, ..., channel, strategy, ...) str
+    }
+    
+    %% ===== RELACIONES =====
+    LLMPort <|.. OpenAIAdapter : implements
+    CachePort <|.. MemoryCacheAdapter : implements
+    
+    OpenAIAdapter --> Settings : usa
+    MemoryCacheAdapter --> CacheEntry : almacena
+    
+    OpenAIAdapter ..> ClassifyLeadPrompt : usa
+    OpenAIAdapter ..> InferContextPrompt : usa
+    OpenAIAdapter ..> GenerateMessagePrompt : usa
+```
+
+### Tabla de Configuración (Settings)
+
+| Variable | Tipo | Default | Descripción |
+|----------|------|---------|-------------|
+| `app_name` | `str` | `"LeadAdapter"` | Nombre de la aplicación |
+| `app_version` | `str` | `"1.0.0"` | Versión de la API |
+| `debug` | `bool` | `False` | Modo debug |
+| `openai_api_key` | `str` | **Required** | API Key de OpenAI |
+| `openai_model` | `str` | `"gpt-5.1"` | Modelo a usar |
+| `openai_timeout` | `int` | `30` | Timeout en segundos |
+| `redis_url` | `str?` | `None` | URL de Redis (opcional) |
+| `cache_ttl_seconds` | `int` | `3600` | TTL del cache (1 hora) |
+| `quality_threshold` | `float` | `6.0` | Umbral de calidad (0-10) |
+| `max_generation_attempts` | `int` | `3` | Intentos máximos |
+| `rate_limit_requests` | `int` | `100` | Requests por ventana |
+| `rate_limit_window_seconds` | `int` | `60` | Ventana de rate limit |
+
+### Estructura de Prompts
+
+| Prompt | System Prompt | User Prompt Builder | Output |
+|--------|---------------|---------------------|--------|
+| **classify_lead** | Clasificador B2B con 4 role types | `build_classify_lead_prompt(job_title, company, seniority)` | JSON: `{role_type, confidence, reasoning}` |
+| **infer_context** | Experto en research B2B | `build_infer_context_prompt(job_title, company, industry, role_type, ...)` | JSON: `{pain_points[], hooks[], talking_points[]}` |
+| **generate_message** | Copywriter B2B experto | `build_generate_message_prompt(lead_name, channel, strategy, pain_points, ...)` | String: mensaje final |
+
+### Diagrama de Secuencia: Adapter Flow
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant PCO as PromptChainOrchestrator
+    participant Adapter as OpenAIAdapter
+    participant Prompts as Prompt Templates
+    participant OpenAI as OpenAI API
+    participant TikToken as tiktoken
+    
+    Note over PCO,OpenAI: Step 1: Classify Lead
+    PCO->>Prompts: build_classify_lead_prompt(...)
+    Prompts-->>PCO: user_prompt
+    PCO->>Adapter: complete_json(prompt, CLASSIFY_LEAD_SYSTEM)
+    Adapter->>OpenAI: responses.create(model, input, instructions, format=json)
+    OpenAI-->>Adapter: Response{output_text, usage}
+    Adapter-->>PCO: LLMResponse{content, tokens}
+    
+    Note over PCO,OpenAI: Step 2: Infer Context
+    PCO->>Prompts: build_infer_context_prompt(...)
+    Prompts-->>PCO: user_prompt
+    PCO->>Adapter: complete_json(prompt, INFER_CONTEXT_SYSTEM)
+    Adapter->>OpenAI: responses.create(...)
+    OpenAI-->>Adapter: Response
+    Adapter-->>PCO: LLMResponse
+    
+    Note over PCO,OpenAI: Step 3: Generate Message
+    PCO->>Prompts: build_generate_message_prompt(...)
+    Prompts-->>PCO: user_prompt
+    PCO->>Adapter: complete(prompt, GENERATE_MESSAGE_SYSTEM)
+    Adapter->>OpenAI: responses.create(...)
+    OpenAI-->>Adapter: Response
+    Adapter-->>PCO: LLMResponse
+    
+    Note over PCO,TikToken: Token Counting (anytime)
+    PCO->>Adapter: count_tokens(text)
+    Adapter->>TikToken: encode(text)
+    TikToken-->>Adapter: token_list
+    Adapter-->>PCO: len(tokens)
+```
+
