@@ -18,8 +18,7 @@ class Settings(BaseSettings):
     openai_model: str = Field(default="gpt-5.1")
     openai_timeout: int = Field(default=30)
 
-    # Redis Config (opcional)
-    redis_url: str | None = Field(default=None)
+    # Cache Config (actualmente solo MemoryCache, Redis no implementado)
     cache_ttl_seconds: int = Field(default=3600)
 
     # Quality Gate Config

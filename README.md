@@ -820,11 +820,11 @@ sequenceDiagram
 
 ## Fase 3 - Capa de Infraestructura
 
-**Objetivo**: Implementar los adaptadores concretos que satisfacen los puertos definidos en Application Layer, conectando con servicios externos (OpenAI, Redis/Memory).
+**Objetivo**: Implementar los adaptadores concretos que satisfacen los puertos definidos en Application Layer, conectando con servicios externos (OpenAI, Memory Cache).
 
 **Entregables**:
 - **2 Adapters**: `OpenAIAdapter` (LLMPort), `MemoryCacheAdapter` (CachePort)
-- **1 Configuración**: `Settings` (pydantic-settings con 12 variables)
+- **1 Configuración**: `Settings` (pydantic-settings con 11 variables)
 - **3 Templates de Prompts**: `classify_lead`, `infer_context`, `generate_message`
 - **Patrones Aplicados**: Adapter, Singleton (cached settings)
 
@@ -848,7 +848,7 @@ src/infrastructure/
 La capa de infraestructura representa los **detalles técnicos y conexiones externas**. Esta capa:
 
 - **Implementa los puertos**: Los adapters son clases concretas que satisfacen las interfaces ABC
-- **Es intercambiable**: Se puede cambiar OpenAI por Anthropic, o Memory por Redis, sin tocar Application
+- **Es intercambiable**: Se puede cambiar OpenAI por Anthropic sin tocar Application (Redis adapter pendiente)
 - **Centraliza configuración**: Settings usa pydantic-settings con variables de entorno
 - **Encapsula prompts**: Los templates de prompts viven en infraestructura, no en dominio
 
@@ -914,7 +914,6 @@ classDiagram
         +str openai_model
         +int openai_timeout
         --
-        +str? redis_url
         +int cache_ttl_seconds
         --
         +float quality_threshold
@@ -965,7 +964,6 @@ classDiagram
 | `openai_api_key` | `str` | **Required** | API Key de OpenAI |
 | `openai_model` | `str` | `"gpt-5.1"` | Modelo a usar |
 | `openai_timeout` | `int` | `30` | Timeout en segundos |
-| `redis_url` | `str?` | `None` | URL de Redis (opcional) |
 | `cache_ttl_seconds` | `int` | `3600` | TTL del cache (1 hora) |
 | `quality_threshold` | `float` | `6.0` | Umbral de calidad (0-10) |
 | `max_generation_attempts` | `int` | `3` | Intentos máximos |
