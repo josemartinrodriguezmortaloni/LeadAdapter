@@ -6,8 +6,8 @@ This module provides a hierarchy of domain exceptions that support:
 - Backward-compatible string representation
 
 Architecture:
-    DomainException (base)
-    ├── ValidationException (field, reason) HTTP 422
+    DomainError (base)
+    ├── ValidationError (field, reason) HTTP 422
     │   ├── InvalidLeadError
     │   ├── InvalidPlaybookError
     │   ├── InvalidMessageError
@@ -22,11 +22,11 @@ from __future__ import annotations
 
 import re
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any, ClassVar
 
 
-class DomainException(Exception):
+class DomainError(Exception):
     """Base exception for all domain errors.
 
     Provides structured error handling with:
@@ -42,7 +42,7 @@ class DomainException(Exception):
         ERROR_TITLE: Short human-readable title (RFC 7807).
 
     Example:
-        >>> e = DomainException("Something went wrong")
+        >>> e = DomainError("Something went wrong")
         >>> e.to_dict()
         {'error_code': 'DOMAIN', 'message': 'Something went wrong', ...}
     """
@@ -61,7 +61,7 @@ class DomainException(Exception):
         """
         self.message = message
         self.instance_id = str(uuid.uuid4())
-        self.timestamp = datetime.now(timezone.utc).isoformat()
+        self.timestamp = datetime.now(UTC).isoformat()
         super().__init__(message)
 
     @property
@@ -112,7 +112,7 @@ class DomainException(Exception):
         return f"{self.__class__.__name__}({self.error_code!r}, {self.message!r})"
 
 
-class ValidationException(DomainException):
+class ValidationError(DomainError):
     """Base exception for validation errors.
 
     All validation exceptions share field and reason attributes,
@@ -123,7 +123,7 @@ class ValidationException(DomainException):
         reason: Description of why validation failed.
 
     Example:
-        >>> e = ValidationException(field="email", reason="invalid format")
+        >>> e = ValidationError(field="email", reason="invalid format")
         >>> e.field
         'email'
         >>> str(e)
@@ -161,7 +161,7 @@ class ValidationException(DomainException):
         return base
 
 
-class InvalidLeadError(ValidationException):
+class InvalidLeadError(ValidationError):
     """Lead data is invalid or incomplete.
 
     Raised when Lead entity validation fails.
@@ -173,7 +173,7 @@ class InvalidLeadError(ValidationException):
     ERROR_TYPE: ClassVar[str] = "https://api.leadadapter.com/errors/lead-validation"
 
 
-class InvalidPlaybookError(ValidationException):
+class InvalidPlaybookError(ValidationError):
     """Playbook configuration is invalid.
 
     Raised when Playbook entity validation fails.
@@ -185,7 +185,7 @@ class InvalidPlaybookError(ValidationException):
     ERROR_TYPE: ClassVar[str] = "https://api.leadadapter.com/errors/playbook-validation"
 
 
-class InvalidMessageError(ValidationException):
+class InvalidMessageError(ValidationError):
     """Message data is invalid or incomplete.
 
     Raised when Message entity validation fails.
@@ -197,7 +197,7 @@ class InvalidMessageError(ValidationException):
     ERROR_TYPE: ClassVar[str] = "https://api.leadadapter.com/errors/message-validation"
 
 
-class InvalidSenderError(ValidationException):
+class InvalidSenderError(ValidationError):
     """Sender data is invalid or incomplete.
 
     Raised when Sender entity validation fails.
@@ -209,7 +209,7 @@ class InvalidSenderError(ValidationException):
     ERROR_TYPE: ClassVar[str] = "https://api.leadadapter.com/errors/sender-validation"
 
 
-class InvalidProductError(ValidationException):
+class InvalidProductError(ValidationError):
     """Product data is invalid or incomplete.
 
     Raised when Product value object validation fails.
@@ -221,7 +221,7 @@ class InvalidProductError(ValidationException):
     ERROR_TYPE: ClassVar[str] = "https://api.leadadapter.com/errors/product-validation"
 
 
-class InvalidWorkExperienceError(ValidationException):
+class InvalidWorkExperienceError(ValidationError):
     """Work experience data is invalid or incomplete.
 
     Raised when WorkExperience value object validation fails.
@@ -233,7 +233,7 @@ class InvalidWorkExperienceError(ValidationException):
     ERROR_TYPE: ClassVar[str] = "https://api.leadadapter.com/errors/work-experience-validation"
 
 
-class QualityThresholdNotMetError(DomainException):
+class QualityThresholdNotMetError(DomainError):
     """Message quality score below threshold.
 
     Raised when message generation fails to meet quality standards
@@ -285,7 +285,7 @@ class QualityThresholdNotMetError(DomainException):
         return base
 
 
-class NoMatchingICPError(DomainException):
+class NoMatchingICPError(DomainError):
     """No ICP matches the given lead.
 
     Raised when lead qualification fails to find a matching

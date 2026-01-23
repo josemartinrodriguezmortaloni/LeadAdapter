@@ -33,9 +33,9 @@ SOLID Compliance:
     - LSP: All criteria are interchangeable through base class
 """
 
-from .scoring_criterion import ScoringCriterion
-from .personalization_criterion import PersonalizationCriterion
 from .anti_spam_criterion import AntiSpamCriterion
+from .personalization_criterion import PersonalizationCriterion
+from .scoring_criterion import ScoringCriterion
 from .structure_criterion import StructureCriterion
 from .tone_criterion import ToneCriterion
 

@@ -1,7 +1,7 @@
 """Domain exceptions for LeadAdapter."""
 
 from domain.exceptions.domain_exceptions import (
-    DomainException,
+    DomainError,
     InvalidLeadError,
     InvalidMessageError,
     InvalidPlaybookError,
@@ -10,11 +10,11 @@ from domain.exceptions.domain_exceptions import (
     InvalidWorkExperienceError,
     NoMatchingICPError,
     QualityThresholdNotMetError,
-    ValidationException,
+    ValidationError,
 )
 
 __all__ = [
-    "DomainException",
+    "DomainError",
     "InvalidLeadError",
     "InvalidMessageError",
     "InvalidPlaybookError",
@@ -23,5 +23,5 @@ __all__ = [
     "InvalidWorkExperienceError",
     "NoMatchingICPError",
     "QualityThresholdNotMetError",
-    "ValidationException",
+    "ValidationError",
 ]

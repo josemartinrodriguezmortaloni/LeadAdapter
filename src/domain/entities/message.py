@@ -1,6 +1,6 @@
 import uuid
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from domain.enums.channel import Channel
 from domain.enums.message_strategy import MessageStrategy
@@ -19,7 +19,7 @@ class Message:
     quality_breakdown: dict = field(default_factory=dict)
     tokens_used: int = 0
     generation_time_ms: int = 0
-    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
 
     def __post_init__(self) -> None:
         if not self.content.strip():

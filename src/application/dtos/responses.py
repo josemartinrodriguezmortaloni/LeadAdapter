@@ -10,7 +10,7 @@ Note:
     de las entidades de dominio y datos adicionales de metadata.
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from pydantic import BaseModel, Field
 
@@ -139,7 +139,7 @@ class GenerateMessageResponse(BaseModel):
     strategy_used: str = Field(..., description="Estrategia de personalización usada")
     metadata: MetadataDTO = Field(..., description="Metadata técnica")
     created_at: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc),
+        default_factory=lambda: datetime.now(UTC),
         description="Timestamp de creación (UTC)",
     )
 
@@ -222,6 +222,6 @@ class HealthResponse(BaseModel):
     status: str = Field("healthy", description="Estado del servicio")
     version: str = Field(..., description="Versión de la API")
     timestamp: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc),
+        default_factory=lambda: datetime.now(UTC),
         description="Timestamp del check (UTC)",
     )

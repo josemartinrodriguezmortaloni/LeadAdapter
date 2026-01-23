@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 
 # inmutable
@@ -24,5 +24,5 @@ class CampaignHistory:
     def days_since_last_contact(self) -> int | None:
         if not self.last_contact_date:
             return None
-        delta = datetime.now(timezone.utc) - self.last_contact_date
+        delta = datetime.now(UTC) - self.last_contact_date
         return delta.days

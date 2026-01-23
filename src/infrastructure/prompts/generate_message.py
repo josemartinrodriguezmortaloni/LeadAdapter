@@ -1,6 +1,6 @@
 from domain.enums.channel import Channel
-from domain.enums.sequence_step import SequenceStep
 from domain.enums.message_strategy import MessageStrategy
+from domain.enums.sequence_step import SequenceStep
 
 GENERATE_MESSAGE_SYSTEM = """You are an expert B2B copywriter. Generate personalized outreach messages that:
 1. Feel genuine and human (not templated)
