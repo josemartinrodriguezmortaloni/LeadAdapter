@@ -54,7 +54,7 @@ class QualityGate:
             attempts += 1
 
             # Generar mensaje
-            content, tokens = await self.orchestrator.execute_chain(
+            content, tokens, model_used = await self.orchestrator.execute_chain(
                 lead=lead,
                 sender=sender,
                 playbook=playbook,
@@ -83,6 +83,7 @@ class QualityGate:
                     "tone": score_breakdown.tone,
                 },
                 tokens_used=tokens,
+                model_used=model_used,
             )
 
             # Guardar mejor intento

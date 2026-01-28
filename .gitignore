@@ -38,8 +38,8 @@ dist/
 *.egg-info/
 .eggs/
 
-# Alembic
-alembic/versions/*.pyc
+# Bruno test folder
+LeadAdapter/*
 
 # Logs
 *.log

@@ -7,6 +7,7 @@ from domain.exceptions.domain_exceptions import InvalidProductError
 class Product:
     name: str
     description: str
+    category: str
     key_benefits: list[str] = field(default_factory=list)
     target_problems: list[str] = field(default_factory=list)
     differentiators: list[str] = field(default_factory=list)
@@ -14,6 +15,8 @@ class Product:
     def __post_init__(self) -> None:
         if not self.name.strip():
             raise InvalidProductError(field="name", reason="cannot be empty")
+        if not self.category.strip():
+            raise InvalidProductError(field="category", reason="cannot be empty")
 
     def get_benefit_for_pain(self, pain_point: str) -> str | None:
         """Encuentra el beneficio que resuelve un pain point"""

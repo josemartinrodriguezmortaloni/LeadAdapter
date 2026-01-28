@@ -71,12 +71,14 @@ class ProductDTO(BaseModel):
     Attributes:
         name: Nombre del producto/servicio.
         description: Descripción breve del producto.
+        category: Categoría del producto (ej: "Sales Automation", "CRM", "DevTools").
         key_benefits: Lista de beneficios principales (ej: ["Ahorra tiempo", "Reduce costos"]).
         target_problems: Problemas que resuelve (ej: ["Deuda técnica", "Falta de documentación"]).
     """
 
     name: str
     description: str
+    category: str = Field(..., description="Categoría del producto para contexto del LLM")
     key_benefits: list[str] = Field(default_factory=list)
     target_problems: list[str] = Field(default_factory=list)
 
@@ -275,6 +277,7 @@ class GenerateMessageRequest(BaseModel):
                         {
                             "name": "DevPlatform",
                             "description": "Plataforma de desarrollo",
+                            "category": "DevTools",
                             "key_benefits": ["Velocidad", "Calidad"],
                         }
                     ],

@@ -1,0 +1,29 @@
+{
+  "channel": "linkedin",
+  "lead": {
+    "company_name": "Pomelo",
+    "first_name": "Gaston",
+    "job_title": "CTO",
+    "last_name": "Irigoyen"
+  },
+  "playbook": {
+    "communication_style": "Tecnico y peer-to-peer",
+    "products": [
+      {
+        "category": "Developer Platform",
+        "description": "Plataforma de infraestructura para equipos de ingenieria",
+        "key_benefits": [
+          "Reduce deploy time",
+          "Self-service para developers"
+        ],
+        "name": "DevPlatform Pro"
+      }
+    ]
+  },
+  "sender": {
+    "company_name": "Synapsale",
+    "job_title": "CTO",
+    "name": "Fernando"
+  },
+  "sequence_step": "first_contact"
+}

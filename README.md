@@ -27,7 +27,71 @@ Agregar tu api key a la variable
 
 ## Correr
 
-`uv run uvicorn src.main:app --reload`
+`uv run uvicorn src.main:app --reload --app-dir src`
+
+# Prueba
+
+## Prueba 1 
+
+```json
+{
+  "channel": "linkedin",
+  "lead": {
+    "company_name": "Tecnocom",
+    "first_name": "Mateo",
+    "job_title": "Senior PHP Developer",
+    "last_name": "Gutierrez"
+  },
+  "playbook": {
+    "communication_style": "B2B directo",
+    "products": [
+      {
+        "category": "DevTools",
+        "description": "Plataforma de desarrollo",
+        "key_benefits": [
+          "Velocidad",
+          "Calidad"
+        ],
+        "name": "DevPlatform"
+      }
+    ]
+  },
+  "sender": {
+    "company_name": "Synapsale",
+    "job_title": "CTO",
+    "name": "Fernando"
+  },
+  "sequence_step": "first_contact"
+}
+```
+
+Resultado:
+```json
+{
+  "message_id": "msg_cd746d6e3f18",
+  "content": "Hola Mateo, veo que compartimos contactos del mundo PHP enterprise. En Synapsale trabajamos con equipos que lidian con legacy + CI lentos. Creamos DevPlatform para mejorar productividad sin tocar tu stack (Composer, PHPUnit, etc.). ¿Te muestro en 10 min cómo lo usan otros seniors?",
+  "quality": {
+    "score": 7.83,
+    "breakdown": {
+      "personalization": 1.33,
+      "anti_spam": 3,
+      "structure": 2,
+      "tone": 1.5
+    },
+    "passes_threshold": true
+  },
+  "strategy_used": "mutual_connection",
+  "metadata": {
+    "tokens_used": 1723,
+    "generation_time_ms": 22864,
+    "model_used": "gpt-4o-mini",
+    "attempts": 1
+  },
+  "created_at": "2026-01-26T19:38:44.023508Z"
+}
+```
+
+> Para otras pruebas utilizar los json que estan en `tests/fixutres`
 
 # Tech Stack
 
@@ -58,13 +122,13 @@ Agregar tu api key a la variable
 
 # Resumen de lo Realizado
 
-| Fase | Estado | Descripción |
+| Fase | Estado | Descripcion |
 |------|--------|-------------|
-| 0 - Setup | Completada | Estructura hexagonal, configuración |
+| 0 - Setup | Completada | Estructura hexagonal, configuracion |
 | 1 - Domain | Completada | Entidades, VOs, Servicios de dominio |
 | 2 - Application | Completada | Use Cases, DTOs, Ports, Services |
 | 3 - Infrastructure | Completada | Adapters, OpenAI, Cache, Prompts |
-| 4 - API | Pendiente | Endpoints, middleware |
+| 4 - API | Completada | Endpoints, middleware, DI container |
 
 
 ## Fase 0 - Setup del Proyecto
@@ -1018,5 +1082,140 @@ sequenceDiagram
     Adapter->>TikToken: encode(text)
     TikToken-->>Adapter: token_list
     Adapter-->>PCO: len(tokens)
+```
+
+## Fase 4 - Capa de API
+
+**Objetivo**: Exponer la funcionalidad de LeadAdapter a traves de endpoints REST, implementando inyeccion de dependencias y manejo de errores estandarizado.
+
+**Entregables**:
+- **2 Routers**: `messages` (generacion), `health` (monitoreo)
+- **1 Middleware**: `ErrorHandlerMiddleware` (RFC 7807 Problem Details)
+- **1 Composition Root**: `container.py` (Dependency Injection)
+- **Patrones Aplicados**: Composition Root, Dependency Injection, RFC 7807
+
+### Estructura de la Capa
+
+```
+src/api/
+├── __init__.py
+├── dependencies/           # Inyeccion de dependencias
+│   ├── __init__.py
+│   └── container.py        # Composition Root - ensambla el grafo de objetos
+│
+├── middleware/             # Middleware transversal
+│   ├── __init__.py
+│   └── error_handler.py    # Manejo de errores RFC 7807
+│
+└── routers/                # Endpoints agrupados por recurso
+    ├── __init__.py
+    ├── health.py           # GET /health - monitoreo
+    └── messages.py         # POST /messages/generate - core API
+```
+
+La capa de API representa el **punto de entrada HTTP** de la aplicacion. Esta capa:
+
+- **Delega en Use Cases**: Los routers solo orquestan request/response, la logica vive en Application
+- **Inyecta dependencias**: El container ensambla todo el grafo de objetos
+- **Estandariza errores**: Todas las excepciones se convierten a RFC 7807 Problem Details
+- **Es delgada**: Minima logica, maximo reuso
+
+### Modelo de la Capa de API
+
+```mermaid
+classDiagram
+    direction TB
+    
+    %% ===== ROUTERS =====
+    class MessagesRouter {
+        <<router>>
+        +POST /messages/generate
+        --
+        -GenerateMessageUseCase use_case
+        +generate_message(request) GenerateMessageResponse
+    }
+    
+    class HealthRouter {
+        <<router>>
+        +GET /health
+        --
+        +health_check() HealthResponse
+    }
+    
+    %% ===== MIDDLEWARE =====
+    class ErrorHandlerMiddleware {
+        +PROBLEM_JSON_MEDIA_TYPE: str
+        --
+        +handle_domain_exception(request, exc) JSONResponse
+        +handle_validation_exception(request, exc) JSONResponse
+        +handle_unhandled_exception(request, exc) JSONResponse
+        +register(app) None
+        +as_middleware() Callable
+    }
+    
+    %% ===== DEPENDENCY INJECTION =====
+    class Container {
+        <<module>>
+        +get_llm_adapter() OpenAIAdapter
+        +get_cache_adapter() MemoryCacheAdapter
+        +get_generate_message_use_case() GenerateMessageUseCase
+    }
+    
+    %% ===== RELACIONES =====
+    MessagesRouter --> Container : usa Depends()
+    Container --> GenerateMessageUseCase : crea
+    Container --> OpenAIAdapter : singleton
+    Container --> MemoryCacheAdapter : singleton
+    
+    ErrorHandlerMiddleware --> DomainError : maneja
+    ErrorHandlerMiddleware --> ValidationError : maneja
+```
+
+### Endpoints
+
+| Endpoint | Metodo | Descripcion | Request | Response |
+|----------|--------|-------------|---------|----------|
+| `/api/v1/health` | GET | Health check para monitoreo | - | `HealthResponse` |
+| `/api/v1/messages/generate` | POST | Genera mensaje personalizado | `GenerateMessageRequest` | `GenerateMessageResponse` |
+
+### Diagrama de Secuencia: Request Flow
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Client
+    participant Router as MessagesRouter
+    participant DI as Container
+    participant UC as GenerateMessageUseCase
+    participant Middleware as ErrorHandler
+    
+    Client->>Router: POST /messages/generate
+    
+    rect rgb(240, 248, 255)
+        Note over Router,DI: 1. Dependency Injection
+        Router->>DI: Depends(get_generate_message_use_case)
+        DI->>DI: get_llm_adapter() [cached]
+        DI->>DI: get_cache_adapter() [cached]
+        DI-->>Router: use_case instance
+    end
+    
+    rect rgb(255, 248, 240)
+        Note over Router,UC: 2. Execute Use Case
+        Router->>UC: execute(request)
+        UC-->>Router: GenerateMessageResponse
+    end
+    
+    alt Success
+        Router-->>Client: 200 OK + JSON response
+    else Domain Exception
+        UC-->>Middleware: raise InvalidLeadError
+        Middleware-->>Client: 400 + RFC 7807
+    else Validation Exception
+        UC-->>Middleware: raise ValidationError
+        Middleware-->>Client: 422 + RFC 7807
+    else Unexpected Error
+        UC-->>Middleware: raise Exception
+        Middleware-->>Client: 500 + RFC 7807 (sin detalles)
+    end
 ```
 

@@ -31,6 +31,7 @@ def build_generate_message_prompt(
     product_benefit: str,
     communication_style: str,
     years_in_role: int | None = None,
+    seniority_tone: str | None = None,
 ) -> str:
     """Construye el prompt para generar mensaje."""
 
@@ -69,6 +70,7 @@ PRODUCT TO MENTION:
 - Key Benefit: {product_benefit}
 
 TONE: {communication_style}
+ADAPT TO RECIPIENT: {seniority_tone or "profesional"}
 
 MAX LENGTH: {channel.max_length} characters
 

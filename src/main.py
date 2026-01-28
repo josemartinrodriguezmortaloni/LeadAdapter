@@ -11,7 +11,7 @@ def create_app() -> FastAPI:
 
     app = FastAPI(
         title=settings.app_name,
-        verify=settings.app_version,
+        version=settings.app_version,
         description="API REST para generación de mensajes de prospección B2B personalizados",
         docs_url="/docs",
         redoc_url="/redoc",
@@ -39,4 +39,4 @@ app = create_app()
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run("main:app", host="0.0.0", port=8000, reload=True)
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

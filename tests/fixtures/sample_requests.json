@@ -1,0 +1,89 @@
+[
+  {
+    "channel": "linkedin",
+    "lead": {
+      "company_name": "Pomelo",
+      "first_name": "Gaston",
+      "job_title": "CTO",
+      "last_name": "Irigoyen"
+    },
+    "playbook": {
+      "communication_style": "Tecnico y peer-to-peer",
+      "products": [
+        {
+          "category": "Developer Platform",
+          "description": "Plataforma de infraestructura para equipos de ingenieria",
+          "key_benefits": [
+            "Reduce deploy time",
+            "Self-service para developers"
+          ],
+          "name": "DevPlatform Pro"
+        }
+      ]
+    },
+    "sender": {
+      "company_name": "Synapsale",
+      "job_title": "CTO",
+      "name": "Fernando"
+    },
+    "sequence_step": "first_contact"
+  },
+  {
+    "channel": "email",
+    "lead": {
+      "company_name": "Tiendanube",
+      "first_name": "Mariana",
+      "job_title": "Head of Sales",
+      "last_name": "Lopez"
+    },
+    "playbook": {
+      "communication_style": "Consultivo y orientado a resultados",
+      "products": [
+        {
+          "category": "Sales Automation",
+          "description": "Plataforma de outreach con IA que genera mensajes personalizados",
+          "key_benefits": [
+            "3x mas respuestas",
+            "Ahorra 10hrs por SDR"
+          ],
+          "name": "AI Outreach Platform"
+        }
+      ]
+    },
+    "sender": {
+      "company_name": "Synapsale",
+      "job_title": "Account Executive",
+      "name": "Lucia"
+    },
+    "sequence_step": "follow_up_1"
+  },
+  {
+    "channel": "email",
+    "lead": {
+      "company_name": "Mural",
+      "first_name": "Santiago",
+      "job_title": "Engineering Manager",
+      "last_name": "Fernandez"
+    },
+    "playbook": {
+      "communication_style": "Respetuoso y sin presion",
+      "products": [
+        {
+          "category": "Developer Experience",
+          "description": "Suite de herramientas para productividad de equipos de desarrollo",
+          "key_benefits": [
+            "Reduce friccion diaria",
+            "Onboarding 50% mas rapido"
+          ],
+          "name": "DX Suite"
+        }
+      ]
+    },
+    "sender": {
+      "company_name": "Synapsale",
+      "job_title": "CTO",
+      "name": "Fernando"
+    },
+    "sequence_step": "breakup"
+  }
+]

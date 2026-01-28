@@ -1,0 +1,29 @@
+{
+  "channel": "email",
+  "lead": {
+    "company_name": "Tiendanube",
+    "first_name": "Mariana",
+    "job_title": "Head of Sales",
+    "last_name": "Lopez"
+  },
+  "playbook": {
+    "communication_style": "Consultivo y orientado a resultados",
+    "products": [
+      {
+        "category": "Sales Automation",
+        "description": "Plataforma de outreach con IA que genera mensajes personalizados",
+        "key_benefits": [
+          "3x mas respuestas",
+          "Ahorra 10hrs por SDR"
+        ],
+        "name": "AI Outreach Platform"
+      }
+    ]
+  },
+  "sender": {
+    "company_name": "Synapsale",
+    "job_title": "Account Executive",
+    "name": "Lucia"
+  },
+  "sequence_step": "follow_up_1"
+}

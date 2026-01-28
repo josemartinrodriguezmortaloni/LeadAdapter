@@ -1,0 +1,29 @@
+{
+  "channel": "email",
+  "lead": {
+    "company_name": "Mural",
+    "first_name": "Santiago",
+    "job_title": "Engineering Manager",
+    "last_name": "Fernandez"
+  },
+  "playbook": {
+    "communication_style": "Respetuoso y sin presion",
+    "products": [
+      {
+        "category": "Developer Experience",
+        "description": "Suite de herramientas para productividad de equipos de desarrollo",
+        "key_benefits": [
+          "Reduce friccion diaria",
+          "Onboarding 50% mas rapido"
+        ],
+        "name": "DX Suite"
+      }
+    ]
+  },
+  "sender": {
+    "company_name": "Synapsale",
+    "job_title": "CTO",
+    "name": "Fernando"
+  },
+  "sequence_step": "breakup"
+}

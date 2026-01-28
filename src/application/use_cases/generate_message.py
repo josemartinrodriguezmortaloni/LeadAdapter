@@ -168,7 +168,7 @@ class GenerateMessageUseCase:
             metadata=MetadataDTO(
                 tokens_used=message.tokens_used,
                 generation_time_ms=generation_time_ms,
-                model_used="gpt-4o-mini",  # TODO: Get from LLMResponse.model
+                model_used=message.model_used,
                 attempts=attempts,
             ),
         )

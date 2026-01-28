@@ -40,3 +40,18 @@ class Seniority(str, Enum):
     def is_technical(self) -> bool:
         """Determina si este nivel es típicamente técnico/IC."""
         return self in (Seniority.SENIOR, Seniority.MID, Seniority.JUNIOR)
+
+    @property
+    def communication_tone(self) -> str:
+        """Tono de comunicación apropiado para este nivel."""
+        tones = {
+            Seniority.C_LEVEL: "conciso, orientado a resultados de negocio y ROI",
+            Seniority.VP: "estratégico, enfocado en impacto organizacional",
+            Seniority.DIRECTOR: "profesional, balance entre estrategia y ejecución",
+            Seniority.MANAGER: "colaborativo, enfocado en eficiencia del equipo",
+            Seniority.SENIOR: "técnico y directo, respetando su experiencia",
+            Seniority.MID: "amigable y educativo, mostrando valor claro",
+            Seniority.JUNIOR: "accesible y sin jerga compleja",
+            Seniority.UNKNOWN: "profesional y neutro",
+        }
+        return tones.get(self, "profesional")

@@ -15,6 +15,7 @@ class Message:
     sequence_step: SequenceStep
     strategy_used: MessageStrategy
     quality_score: float
+    model_used: str
     message_id: str = field(default_factory=lambda: f"msg_{uuid.uuid4().hex[:12]}")
     quality_breakdown: dict = field(default_factory=dict)
     tokens_used: int = 0

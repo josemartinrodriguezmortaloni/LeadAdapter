@@ -41,9 +41,12 @@ class OpenAIAdapter(LLMPort):
         self, prompt: str, system_prompt: str | None = None, temperature: float = 0.3
     ) -> LLMResponse:
         json_instructions = (system_prompt or "") + "\n Respond only with valid JSON"
+
+        json_input = prompt + "\n\nPlease respond in JSON format."
+
         response = await self.client.responses.create(
             model=self.model,
-            input=prompt,
+            input=json_input,
             instructions=json_instructions,
             temperature=temperature,
             text={"format": {"type": "json_object"}},

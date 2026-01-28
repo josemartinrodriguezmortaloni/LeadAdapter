@@ -106,6 +106,7 @@ class EntityMapper:
             Product(
                 name=prod.name,
                 description=prod.description,
+                category=prod.category,
                 key_benefits=list(prod.key_benefits),
                 target_problems=list(prod.target_problems),
             )
